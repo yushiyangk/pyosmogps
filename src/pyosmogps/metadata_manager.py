@@ -68,30 +68,30 @@ def extract_gps_info(metadata, timezone_offset=0, extract_extensions=False):
 
     gps_data = []
 
-    for gps in message.gps_info:
+    for frame in message.frame_info:
         try:
-            gpsdate = parser.parse(gps.remote_gps_info.coordinates.datetime.datetime)
+            gpsdate = parser.parse(frame.remote_gps_info.coordinates.datetime.datetime)
             homedate = gpsdate - timedelta(hours=timezone_offset)
 
             gps_point = {
                 "timeinfo": homedate,
-                "altitude": gps.remote_gps_info.coordinates.gps_altitude_mm / 1000,
-                "longitude": gps.remote_gps_info.coordinates.info.longitude,
-                "latitude": gps.remote_gps_info.coordinates.info.latitude,
+                "altitude": frame.remote_gps_info.coordinates.gps_altitude_mm / 1000,
+                "longitude": frame.remote_gps_info.coordinates.info.longitude,
+                "latitude": frame.remote_gps_info.coordinates.info.latitude,
             }
 
             if extract_extensions:
                 gps_point.update(
                     {
-                        "camera_acc_x": gps.camera_info.accelerometer1.x,
-                        "camera_acc_y": gps.camera_info.accelerometer1.y,
-                        "camera_acc_z": gps.camera_info.accelerometer1.z,
-                        "camera_acc2_x": gps.camera_info.accelerometer2.x,
-                        "camera_acc2_y": gps.camera_info.accelerometer2.y,
-                        "camera_acc2_z": gps.camera_info.accelerometer2.z,
-                        "remote_der_x": gps.remote_gps_info.derivatives.x,
-                        "remote_der_y": gps.remote_gps_info.derivatives.y,
-                        "remote_der_z": gps.remote_gps_info.derivatives.z,
+                        "camera_acc_x": frame.camera_info.accelerometer1.x,
+                        "camera_acc_y": frame.camera_info.accelerometer1.y,
+                        "camera_acc_z": frame.camera_info.accelerometer1.z,
+                        "camera_acc2_x": frame.camera_info.accelerometer2.x,
+                        "camera_acc2_y": frame.camera_info.accelerometer2.y,
+                        "camera_acc2_z": frame.camera_info.accelerometer2.z,
+                        "remote_der_x": frame.remote_gps_info.derivatives.x,
+                        "remote_der_y": frame.remote_gps_info.derivatives.y,
+                        "remote_der_z": frame.remote_gps_info.derivatives.z,
                     }
                 )
 
