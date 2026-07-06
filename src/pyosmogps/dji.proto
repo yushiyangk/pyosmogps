@@ -6,7 +6,7 @@ message DjiModuleInfo {
     string unk2 = 3;
     string serial_number = 5;
     string unk4 = 6;
-    uint32 unk5 = 9;
+    uint32 start_offset_microsecond = 9;
     string camera_name = 10;
 }
 
@@ -55,16 +55,20 @@ message DjiUnkfloat_1 {
     float unknown = 1;
 }
 
-message DjiUnkInt32_1 {
-    int32 unknown = 1;
+message DjiSensitivity {
+    float iso = 1;
+}
+
+message DjiWhiteBalance {
+    uint32 temperature = 1;
 }
 
 message DjiUnkUInt32_1 {
     uint32 unknown = 1;
 }
 
-message DjiUnkRepBytes_1 {
-    repeated bytes unknown_field = 1;
+message UInt32List {
+    repeated uint32 value = 1;
 }
 
 message DjiCameraAccelInfo {
@@ -76,10 +80,10 @@ message DjiCameraAccelInfo {
 
 message DjiCameraInfo {
     DjiUnkfloat_1 unk1 = 2;
-    DjiUnkfloat_1 unk2 = 3;
-    DjiUnkRepBytes_1 unk3 = 4;
+    DjiSensitivity sensitivity = 3;
+    UInt32List shutter_speed = 4;
     DjiUnkfloat_1 unk4 = 5;
-    DjiUnkUInt32_1 unk5 = 6;
+    DjiWhiteBalance white_balance = 6;
     DjiUnkUInt32_1 unk6 = 7;
     uint32 unk7 = 8;
     DjiCameraAccelInfo accelerometer1 = 9;
@@ -90,7 +94,7 @@ message DjiCameraInfo {
 
 message GpsFrameInfo {
     uint32 frame_id = 1;
-    uint32 unknown = 2;
+    uint32 frame_offset_microsecond = 2;
 }
 
 message DjiGpsInfo {
