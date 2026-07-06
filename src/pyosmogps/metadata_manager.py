@@ -67,6 +67,10 @@ def extract_gps_info(metadata, timezone_offset=0, extract_extensions=False):
     # TODO: check that the message contains the GPS data
 
     gps_data = []
+    start_offset_microsecond = None
+    if extract_extensions:
+        if len(message.video_global_info.module_info) > 0:
+            start_offset_microsecond = message.video_global_info.module_info[0].start_offset_microsecond
 
     for frame in message.frame_info:
         try:
@@ -81,8 +85,15 @@ def extract_gps_info(metadata, timezone_offset=0, extract_extensions=False):
             }
 
             if extract_extensions:
+                if start_offset_microsecond is not None:
+                    gps_point["rel_frame_time_microsecond"] = frame.time_info.frame_offset_microsecond - start_offset_microsecond
+
                 gps_point.update(
                     {
+                        "frame_id": frame.time_info.frame_id,
+                        "iso": frame.camera_info.sensitivity.iso,
+                        "shutter_speed": frame.camera_info.shutter_speed.value,
+                        "colour_temperature": frame.camera_info.white_balance.temperature,
                         "camera_acc_x": frame.camera_info.accelerometer1.x,
                         "camera_acc_y": frame.camera_info.accelerometer1.y,
                         "camera_acc_z": frame.camera_info.accelerometer1.z,

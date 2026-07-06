@@ -108,6 +108,25 @@ class OsmoGps:
                 if self.extract_extensions:
                     extensions = ET.Element("extensions")
 
+                    frame_id_ext = ET.SubElement(extensions, "fid")
+                    frame_id_ext.text = str(self.gps_data[i]["frame_id"])
+
+                    rel_frame_time_ext = ET.SubElement(extensions, "t")
+                    rel_frame_time_ext.text = str(self.gps_data[i]["rel_frame_time_microsecond"])
+
+                    iso_ext = ET.SubElement(extensions, "iso")
+                    iso_ext.text = str(round(self.gps_data[i]["iso"]))
+
+                    shutter_speed_ext = ET.SubElement(extensions, "ss")
+                    shutter_speed_values = self.gps_data[i]["shutter_speed"]
+                    shutter_speed_ext.text = str(shutter_speed_values[0]) + (
+                        "/" + str(shutter_speed_values[1])
+                        if len(shutter_speed_values) > 1 else ""
+                    )
+
+                    colour_temperature_ext = ET.SubElement(extensions, "wb")
+                    colour_temperature_ext.text = str(self.gps_data[i]["colour_temperature"])
+
                     acc_x_ext = ET.SubElement(extensions, "acc_x")
                     acc_x_ext.text = f"{self.gps_data[i]['camera_acc_x']:.3f}"
 
