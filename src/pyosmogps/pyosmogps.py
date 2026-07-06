@@ -89,7 +89,7 @@ class OsmoGps:
             self.gps_data = resampled_data
 
     def save_gpx(self, output_file):
-        if self.gps_data != []:
+        if self.gps_data is not None and self.gps_data != []:
             gpx = gpxpy.gpx.GPX()
             gpx.creator = "pyosmogps -- https://github.com/francescocaponio/pyosmogps"
             track = gpxpy.gpx.GPXTrack()
@@ -97,46 +97,34 @@ class OsmoGps:
             segment = gpxpy.gpx.GPXTrackSegment()
             track.segments.append(segment)
 
-            latitude = [point["latitude"] for point in self.gps_data]
-            longitude = [point["longitude"] for point in self.gps_data]
-            altitude = [point["altitude"] for point in self.gps_data]
-            timeinfo = [point["timeinfo"] for point in self.gps_data]
-            if self.extract_extensions:
-                camera_acc_x = [point["camera_acc_x"] for point in self.gps_data]
-                camera_acc_y = [point["camera_acc_y"] for point in self.gps_data]
-                camera_acc_z = [point["camera_acc_z"] for point in self.gps_data]
-                remote_der_x = [point["remote_der_x"] for point in self.gps_data]
-                remote_der_y = [point["remote_der_y"] for point in self.gps_data]
-                remote_der_z = [point["remote_der_z"] for point in self.gps_data]
-
-            for i in range(len(timeinfo)):
+            for i in range(len(self.gps_data)):
                 point = gpxpy.gpx.GPXTrackPoint(
-                    latitude=latitude[i],
-                    longitude=longitude[i],
-                    elevation=altitude[i],
-                    time=timeinfo[i],
+                    latitude=self.gps_data[i]["latitude"],
+                    longitude=self.gps_data[i]["longitude"],
+                    elevation=self.gps_data[i]["altitude"],
+                    time=self.gps_data[i]["timeinfo"],
                 )
 
                 if self.extract_extensions:
                     extensions = ET.Element("extensions")
 
                     acc_x_ext = ET.SubElement(extensions, "acc_x")
-                    acc_x_ext.text = f"{camera_acc_x[i]:.3f}"
+                    acc_x_ext.text = f"{self.gps_data[i]['camera_acc_x']:.3f}"
 
                     acc_y_ext = ET.SubElement(extensions, "acc_y")
-                    acc_y_ext.text = f"{camera_acc_y[i]:.3f}"
+                    acc_y_ext.text = f"{self.gps_data[i]['camera_acc_y']:.3f}"
 
                     acc_z_ext = ET.SubElement(extensions, "acc_z")
-                    acc_z_ext.text = f"{camera_acc_z[i]:.3f}"
+                    acc_z_ext.text = f"{self.gps_data[i]['camera_acc_z']:.3f}"
 
                     der_x_ext = ET.SubElement(extensions, "der_x")
-                    der_x_ext.text = f"{remote_der_x[i]:.3f}"
+                    der_x_ext.text = f"{self.gps_data[i]['remote_der_x']:.3f}"
 
                     der_y_ext = ET.SubElement(extensions, "der_y")
-                    der_y_ext.text = f"{remote_der_y[i]:.3f}"
+                    der_y_ext.text = f"{self.gps_data[i]['remote_der_y']:.3f}"
 
                     der_z_ext = ET.SubElement(extensions, "der_z")
-                    der_z_ext.text = f"{remote_der_z[i]:.3f}"
+                    der_z_ext.text = f"{self.gps_data[i]['remote_der_z']:.3f}"
 
                     point.extensions.append(extensions)
                 segment.points.append(point)
