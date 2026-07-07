@@ -1,7 +1,7 @@
 import csv
 import logging
 import xml.etree.ElementTree as ET
-from typing import Optional
+from typing import Dict, Optional, Sequence
 
 import gpxpy.gpx
 
@@ -140,53 +140,24 @@ class OsmoGps:
                 if self.extract_extensions:
                     extensions = ET.Element("extensions")
 
-                    if "frame_id" in gps_point:
-                        frame_id_ext = ET.SubElement(extensions, "fid")
-                        frame_id_ext.text = str(gps_point["frame_id"])
+                    rendered_point = _render_point(gps_point)
 
-                    if "rel_frame_time_microsecond" in gps_point:
-                        rel_frame_time_ext = ET.SubElement(extensions, "t")
-                        rel_frame_time_ext.text = str(gps_point["rel_frame_time_microsecond"])
-
-                    if "iso" in gps_point:
-                        iso_ext = ET.SubElement(extensions, "iso")
-                        iso_ext.text = str(round(gps_point["iso"]))
-
-                    if "shutter_speed" in gps_point:
-                        shutter_speed_ext = ET.SubElement(extensions, "ss")
-                        shutter_speed_values = gps_point["shutter_speed"]
-                        shutter_speed_ext.text = str(shutter_speed_values[0]) + (
-                            "/" + str(shutter_speed_values[1])
-                            if len(shutter_speed_values) > 1 else ""
-                        )
-
-                    if "colour_temperature" in gps_point:
-                        colour_temperature_ext = ET.SubElement(extensions, "wb")
-                        colour_temperature_ext.text = str(gps_point["colour_temperature"])
-
-                    if "camera_acc_x" in gps_point:
-                        acc_x_ext = ET.SubElement(extensions, "acc_x")
-                        acc_x_ext.text = f"{gps_point['camera_acc_x']:.3f}"
-
-                    if "camera_acc_y" in gps_point:
-                        acc_y_ext = ET.SubElement(extensions, "acc_y")
-                        acc_y_ext.text = f"{gps_point['camera_acc_y']:.3f}"
-
-                    if "camera_acc_z" in gps_point:
-                        acc_z_ext = ET.SubElement(extensions, "acc_z")
-                        acc_z_ext.text = f"{gps_point['camera_acc_z']:.3f}"
-
-                    if "remote_der_x" in gps_point:
-                        der_x_ext = ET.SubElement(extensions, "der_x")
-                        der_x_ext.text = f"{gps_point['remote_der_x']:.3f}"
-
-                    if "remote_der_y" in gps_point:
-                        der_y_ext = ET.SubElement(extensions, "der_y")
-                        der_y_ext.text = f"{gps_point['remote_der_y']:.3f}"
-
-                    if "remote_der_z" in gps_point:
-                        der_z_ext = ET.SubElement(extensions, "der_z")
-                        der_z_ext.text = f"{gps_point['remote_der_z']:.3f}"
+                    for tag, key in [
+                        ("fid", "frame_id"),
+                        ("t", "rel_frame_time_microsecond"),
+                        ("iso", "iso"),
+                        ("ss", "shutter_speed"),
+                        ("wb", "colour_temperature"),
+                        ("acc_x", "camera_acc_x"),
+                        ("acc_y", "camera_acc_y"),
+                        ("acc_z", "camera_acc_z"),
+                        ("der_x", "remote_der_x"),
+                        ("der_y", "remote_der_y"),
+                        ("der_z", "remote_der_z"),
+                    ]:
+                        if key in rendered_point:
+                            ext = ET.SubElement(extensions, tag)
+                            ext.text = rendered_point[key]
 
                     point.extensions.append(extensions)
                 segment.points.append(point)
@@ -217,8 +188,8 @@ class OsmoGps:
                 )
 
                 dict_writer.writeheader()
-                for point in self.gps_data:
-                    dict_writer.writerow(point)
+                for point in self.gps_data:\
+                    dict_writer.writerow(_render_point(point))
                 logger.info(f"Data written to {output_file}")
 
                 return True
@@ -276,3 +247,50 @@ class _LinkedListNode:
 def _has_gps(point: dict) -> bool:
     required_fields = {"timeinfo", "altitude", "longitude", "latitude"}
     return required_fields <= point.keys()
+
+def _render_point(point: dict) -> Dict[str, str]:
+    rendered_point = {}
+
+    if "frame_id" in point:
+        rendered_point["frame_id"] = str(point["frame_id"])
+
+    if "rel_frame_time_microsecond" in point:
+        rendered_point["rel_frame_time_microsecond"] = str(point["rel_frame_time_microsecond"])
+
+    if "iso" in point:
+        rendered_point["iso"] = str(round(point["iso"]))
+
+    if "shutter_speed" in point:
+        rendered_point["shutter_speed"] = _render_shutter_speed(point["shutter_speed"])
+
+    if "colour_temperature" in point:
+        rendered_point["colour_temperature"] = str(point["colour_temperature"])
+
+    if "camera_acc_x" in point:
+        rendered_point["camera_acc_x"] = f"{point['camera_acc_x']:.3f}"
+
+    if "camera_acc_y" in point:
+        rendered_point["camera_acc_y"] = f"{point['camera_acc_y']:.3f}"
+
+    if "camera_acc_z" in point:
+        rendered_point["camera_acc_z"] = f"{point['camera_acc_z']:.3f}"
+
+    if "remote_der_x" in point:
+        rendered_point["remote_der_x"] = f"{point['remote_der_x']:.3f}"
+
+    if "remote_der_y" in point:
+        rendered_point["remote_der_y"] = f"{point['remote_der_y']:.3f}"
+
+    if "remote_der_z" in point:
+        rendered_point["remote_der_z"] = f"{point['remote_der_z']:.3f}"
+
+    return rendered_point
+
+def _render_shutter_speed(values: Sequence[int]) -> str:
+    length = len(values)
+    if length == 0:
+        return ""
+    elif length == 1:
+        return str(values[0])
+    else:
+        return f"{values[0]}/{values[1]}"
