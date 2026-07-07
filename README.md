@@ -5,8 +5,9 @@ PyOsmoGPS is a Python library designed to extract GPS data embedded in video fil
 ## Features
 
 - Extracts GPS data from video files.
+- Extracts camera metadata including ISO, shutter speed and white balance.
 - Supports DJI Osmo Action 4, 5 and 6 cameras.
-- Converts GPS data to standard GPX format.
+- Converts GPS data to standard GPX format or outputs raw data as CSV.
 - Allows customization of output frequency and resampling methods.
 - Implements filtering and interpolation algorithms for better accuracy.
 - Provides a command-line interface for easy use.
@@ -43,7 +44,7 @@ python -m pyosmogps ...
 
 ### Usage
 
-You can use PyOsmoGPS as a python library, a command-line tool or as a Docker container. The tool checks that the input video file is compatible with the DJI Osmo Action 4, 5 or 6 cameras and that it contains GPS data, extracting it and converting it to a `.gpx` file. It can be used to create video overlays with GPS data or to analyze the GPS track.
+You can use PyOsmoGPS as a python library, a command-line tool or as a Docker container. The tool checks that the input video file is compatible with the DJI Osmo Action 4, 5 or 6 cameras. By default, it expects the video to contain GPS data, and will extract and convert it to a `.gpx` file. It can be used to create video overlays with GPS data or to analyze the GPS track.
 
 The GPS data is stored when the camera is successfully connected to the remote controller and the GPS signal is acquired. The data is embedded in the video file and can be extracted using PyOsmoGPS.
 
@@ -51,6 +52,12 @@ The GPS data is stored when the camera is successfully connected to the remote c
 ![Osmo Remote Controller](assets/osmo-action-4.png)
 
 A compatible tool for the video overlay creation is [gopro-dashboard-overlay](https://github.com/time4tea/gopro-dashboard-overlay), which has a gpx input mode that can be used with the output of PyOsmoGPS.
+
+#### Other metadata
+
+The tool can also extract other metadata embedded in supported video files, such as camera ISO, shutter speed and white balance, and accelerometer data. This works on files that do not contain GPS data as well.
+
+This additional data can be embedded in a GPX file, or can be saved as a CSV (comma-separated value) file for analysis with other software.
 
 #### Python Library
 
@@ -75,6 +82,20 @@ output = "path/to/output.gpx"
 gps.save_gpx(output)
 ```
 
+It can also be used to extract camera metadata to a CSV, even when GPS data is not present:
+
+```python
+from pyosmogps import OsmoGps
+
+
+# Create an instance of the OsmoGps class that extracts all metadata, with or without GPS
+data = OsmoGps("path/to/input.mp4", extract_extensions=True, require_gps=False)
+
+# save it as a GPX file
+output = "path/to/output.csv"
+data.save_csv(output)
+```
+
 ##### Example of use in Jupyter Lab
 
 ![Jupyter Lab Example](assets/jupyter-lab.png)
@@ -90,6 +111,20 @@ pyosmogps extract input.mp4 output.gpx
 ```
 
 This command will read the GPS data from the video file `input.mp4` and save it as a GPX file `output.gpx`.
+
+To extract GPS data from a video file and save it as a CSV file, use the `extract-csv` command instead:
+
+```bash
+pyosmogps extract-csv input.mp4 output.csv
+```
+
+To extract all metadata froma video file (with or without GPS data) to a CSV file:
+
+```bash
+pyosmogps extract-csv --additional input.mp4 output.csv
+```
+
+The additional metadata can also be embedded in a GPX file using the `extract` command.
 
 If you want to extract GPS data from multiple video files, you can specify them as a list:
 
