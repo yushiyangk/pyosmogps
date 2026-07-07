@@ -1,5 +1,7 @@
+import csv
 import logging
 import xml.etree.ElementTree as ET
+from typing import Optional
 
 import gpxpy.gpx
 
@@ -167,8 +169,65 @@ class OsmoGps:
             logger.info(f"GPS data written to {output_file}")
             return True
         else:
-            logger.info("No GPS data extracted.")
+            logger.info("No GPS data written.")
             return False
+
+    def save_csv(self, output_file):
+        if self.gps_data is not None and self.gps_data != []:
+            fields = self._get_ordered_fields()
+            if "frame_id" in fields:
+                fields.remove("frame_id")
+                fields.insert(0, "frame_id")
+
+            with open(output_file, 'w', newline="") as csv_file:
+                logger.info("Writing data to CSV file.")
+                dict_writer = csv.DictWriter(
+                    csv_file,
+                    fieldnames=fields,
+                    restval="",
+                    extrasaction='raise',
+                )
+
+                dict_writer.writeheader()
+                for point in self.gps_data:
+                    dict_writer.writerow(point)
+                logger.info(f"Data written to {output_file}")
+
+                return True
+
+        else:
+            logger.info("No data written.")
+            return False
+
+    def _get_ordered_fields(self) -> list:
+        if self.gps_data is None or len(self.gps_data) == 0:
+            return []
+
+        fields_linked_list: Optional[_LinkedListNode] = None
+        fields_index = {}
+        for point in self.gps_data:
+            prev_field: Optional[str] = None
+            for field in point.keys():
+                if field not in fields_index:
+                    if prev_field is None:
+                        new_node = _LinkedListNode(field, next_node=fields_linked_list)
+                        fields_linked_list = new_node
+                    else:
+                        prev_node = fields_index[prev_field]
+                        new_node = _LinkedListNode(field, next_node=prev_node.next_node)
+                        prev_node.next_node = new_node
+
+                    fields_index[field] = new_node
+
+                prev_field = field
+
+        ordered_fields = []
+        node = fields_linked_list
+        while node is not None:
+            ordered_fields.append(node.value)
+            node = node.next_node
+
+        return ordered_fields
 
     def get_altitude(self):
         return [point["altitude"] for point in self.gps_data]
@@ -178,3 +237,9 @@ class OsmoGps:
 
     def get_longitude(self):
         return [point["longitude"] for point in self.gps_data]
+
+
+class _LinkedListNode:
+    def __init__(self, value: str, next_node: Optional['_LinkedListNode']=None):
+        self.value = value
+        self.next_node = next_node
