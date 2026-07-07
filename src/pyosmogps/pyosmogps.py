@@ -98,52 +98,65 @@ class OsmoGps:
             track.segments.append(segment)
 
             for i in range(len(self.gps_data)):
+                gps_point = self.gps_data[i]
+
                 point = gpxpy.gpx.GPXTrackPoint(
-                    latitude=self.gps_data[i]["latitude"],
-                    longitude=self.gps_data[i]["longitude"],
-                    elevation=self.gps_data[i]["altitude"],
-                    time=self.gps_data[i]["timeinfo"],
+                    latitude=gps_point["latitude"],
+                    longitude=gps_point["longitude"],
+                    elevation=gps_point["altitude"],
+                    time=gps_point["timeinfo"],
                 )
 
                 if self.extract_extensions:
                     extensions = ET.Element("extensions")
 
-                    frame_id_ext = ET.SubElement(extensions, "fid")
-                    frame_id_ext.text = str(self.gps_data[i]["frame_id"])
+                    if "frame_id" in gps_point:
+                        frame_id_ext = ET.SubElement(extensions, "fid")
+                        frame_id_ext.text = str(gps_point["frame_id"])
 
-                    rel_frame_time_ext = ET.SubElement(extensions, "t")
-                    rel_frame_time_ext.text = str(self.gps_data[i]["rel_frame_time_microsecond"])
+                    if "rel_frame_time_microsecond" in gps_point:
+                        rel_frame_time_ext = ET.SubElement(extensions, "t")
+                        rel_frame_time_ext.text = str(gps_point["rel_frame_time_microsecond"])
 
-                    iso_ext = ET.SubElement(extensions, "iso")
-                    iso_ext.text = str(round(self.gps_data[i]["iso"]))
+                    if "iso" in gps_point:
+                        iso_ext = ET.SubElement(extensions, "iso")
+                        iso_ext.text = str(round(gps_point["iso"]))
 
-                    shutter_speed_ext = ET.SubElement(extensions, "ss")
-                    shutter_speed_values = self.gps_data[i]["shutter_speed"]
-                    shutter_speed_ext.text = str(shutter_speed_values[0]) + (
-                        "/" + str(shutter_speed_values[1])
-                        if len(shutter_speed_values) > 1 else ""
-                    )
+                    if "shutter_speed" in gps_point:
+                        shutter_speed_ext = ET.SubElement(extensions, "ss")
+                        shutter_speed_values = gps_point["shutter_speed"]
+                        shutter_speed_ext.text = str(shutter_speed_values[0]) + (
+                            "/" + str(shutter_speed_values[1])
+                            if len(shutter_speed_values) > 1 else ""
+                        )
 
-                    colour_temperature_ext = ET.SubElement(extensions, "wb")
-                    colour_temperature_ext.text = str(self.gps_data[i]["colour_temperature"])
+                    if "colour_temperature" in gps_point:
+                        colour_temperature_ext = ET.SubElement(extensions, "wb")
+                        colour_temperature_ext.text = str(gps_point["colour_temperature"])
 
-                    acc_x_ext = ET.SubElement(extensions, "acc_x")
-                    acc_x_ext.text = f"{self.gps_data[i]['camera_acc_x']:.3f}"
+                    if "camera_acc_x" in gps_point:
+                        acc_x_ext = ET.SubElement(extensions, "acc_x")
+                        acc_x_ext.text = f"{gps_point['camera_acc_x']:.3f}"
 
-                    acc_y_ext = ET.SubElement(extensions, "acc_y")
-                    acc_y_ext.text = f"{self.gps_data[i]['camera_acc_y']:.3f}"
+                    if "camera_acc_y" in gps_point:
+                        acc_y_ext = ET.SubElement(extensions, "acc_y")
+                        acc_y_ext.text = f"{gps_point['camera_acc_y']:.3f}"
 
-                    acc_z_ext = ET.SubElement(extensions, "acc_z")
-                    acc_z_ext.text = f"{self.gps_data[i]['camera_acc_z']:.3f}"
+                    if "camera_acc_z" in gps_point:
+                        acc_z_ext = ET.SubElement(extensions, "acc_z")
+                        acc_z_ext.text = f"{gps_point['camera_acc_z']:.3f}"
 
-                    der_x_ext = ET.SubElement(extensions, "der_x")
-                    der_x_ext.text = f"{self.gps_data[i]['remote_der_x']:.3f}"
+                    if "remote_der_x" in gps_point:
+                        der_x_ext = ET.SubElement(extensions, "der_x")
+                        der_x_ext.text = f"{gps_point['remote_der_x']:.3f}"
 
-                    der_y_ext = ET.SubElement(extensions, "der_y")
-                    der_y_ext.text = f"{self.gps_data[i]['remote_der_y']:.3f}"
+                    if "remote_der_y" in gps_point:
+                        der_y_ext = ET.SubElement(extensions, "der_y")
+                        der_y_ext.text = f"{gps_point['remote_der_y']:.3f}"
 
-                    der_z_ext = ET.SubElement(extensions, "der_z")
-                    der_z_ext.text = f"{self.gps_data[i]['remote_der_z']:.3f}"
+                    if "remote_der_z" in gps_point:
+                        der_z_ext = ET.SubElement(extensions, "der_z")
+                        der_z_ext.text = f"{gps_point['remote_der_z']:.3f}"
 
                     point.extensions.append(extensions)
                 segment.points.append(point)
