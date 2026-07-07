@@ -28,7 +28,7 @@ def _make_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "output",
-        help="Output file. Accepts a single file or multiple files.",
+        help="Single output file.",
     )
     parser.add_argument(
         "--additional",
@@ -93,8 +93,8 @@ def main() -> int:
     if args.command == "extract":
         if not args.inputs or not args.output:
             parser.error(
-                "'extract' command requires at least one input file and one "
-                "output file."
+                "'extract' command requires at least one input file and "
+                "exactly one output file."
             )
         success = extract(
             args.inputs,
