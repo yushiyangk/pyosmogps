@@ -17,9 +17,11 @@ def _make_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "command",
-        choices=["extract", "merge"],
+        choices=["extract", "extract-csv", "merge"],
         help="Specify the command to run: 'extract' to extract "
-        "GPS data or 'merge' to merge GPX files.",
+        "GPS data to GPX format, 'extract-csv' "
+        "to extract metadata (with or without GPS) to CSV format, "
+        "or 'merge' to merge GPX files",
     )
     parser.add_argument(
         "inputs",
@@ -65,7 +67,7 @@ def _make_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def extract(inputs, output, frequency, resampling_method, timezone_offset=0, extract_extensions=False, require_gps=True) -> bool:
+def extract(save_method, inputs, output, frequency, resampling_method, timezone_offset=0, extract_extensions=False, require_gps=True) -> bool:
     try:
         gps = OsmoGps(
             inputs,
@@ -74,7 +76,7 @@ def extract(inputs, output, frequency, resampling_method, timezone_offset=0, ext
             require_gps=require_gps,
         )
         gps.resample(frequency, resampling_method)
-        gps.save_gpx(output)
+        save_method(gps, output)
 
     except Exception as e:
         logger.error(f"Error: {e}")
@@ -97,6 +99,7 @@ def main() -> int:
                 "exactly one output file."
             )
         success = extract(
+            OsmoGps.save_gpx,
             args.inputs,
             args.output,
             args.frequency,
@@ -106,6 +109,25 @@ def main() -> int:
             require_gps=True,
         )
         return 0 if success else 1
+
+    elif args.command == "extract-csv":
+        if not args.inputs or not args.output:
+            parser.error(
+                "'extract' command requires at least one input file and "
+                "exactly one output file."
+            )
+        success = extract(
+            OsmoGps.save_csv,
+            args.inputs,
+            args.output,
+            args.frequency,
+            args.resampling_method,
+            args.timezone_offset,
+            extract_extensions=args.additional,
+            require_gps=False,
+        )
+        return 0 if success else 1
+
 
     elif args.command == "merge":
         print("Running merge command...")
