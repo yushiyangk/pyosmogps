@@ -31,6 +31,12 @@ def _make_parser() -> argparse.ArgumentParser:
         help="Output file. Accepts a single file or multiple files.",
     )
     parser.add_argument(
+        "--additional",
+        "-a",
+        action='store_true',
+        help="Extract additional metadata (e.g. camera settings and accelerometer data) if available."
+    )
+    parser.add_argument(
         "--frequency",
         "-f",
         type=float,
@@ -59,9 +65,14 @@ def _make_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def extract(inputs, output, frequency, resampling_method, timezone_offset=0) -> bool:
+def extract(inputs, output, frequency, resampling_method, timezone_offset=0, extract_extensions=False, require_gps=True) -> bool:
     try:
-        gps = OsmoGps(inputs, timezone_offset)
+        gps = OsmoGps(
+            inputs,
+            timezone_offset=timezone_offset,
+            extract_extensions=extract_extensions,
+            require_gps=require_gps,
+        )
         gps.resample(frequency, resampling_method)
         gps.save_gpx(output)
 
@@ -91,6 +102,8 @@ def main() -> int:
             args.frequency,
             args.resampling_method,
             args.timezone_offset,
+            extract_extensions=args.additional,
+            require_gps=True,
         )
         return 0 if success else 1
 
