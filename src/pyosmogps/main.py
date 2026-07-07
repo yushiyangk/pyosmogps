@@ -49,10 +49,10 @@ def _make_parser() -> argparse.ArgumentParser:
         "--resampling-method",
         "-r",
         choices=["discard", "linear", "lpf", "none"],
-        default="linear",
         help="Set the method for resampling data: 'discard' to drop "
         "excess samples, 'linear' for linear interpolation, 'lpf' "
-        "for low pass filtering, 'none' for no data reduction (default: linear).",
+        "for low pass filtering, 'none' for no data reduction (default in "
+        "'extract' mode: linear, default in other modes: none).",
     )
     parser.add_argument(
         "--timezone-offset",
@@ -98,12 +98,19 @@ def main() -> int:
                 "'extract' command requires at least one input file and "
                 "exactly one output file."
             )
+        if args.resampling_method is None:
+            if args.command == "extract":
+                resampling_method = "linear"
+            else:
+                resampling_method = "none"
+        else:
+            resampling_method = args.resampling_method
         success = extract(
             OsmoGps.save_gpx,
             args.inputs,
             args.output,
             args.frequency,
-            args.resampling_method,
+            resampling_method,
             args.timezone_offset,
             extract_extensions=args.additional,
             require_gps=True,
