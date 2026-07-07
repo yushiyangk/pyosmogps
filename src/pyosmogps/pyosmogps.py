@@ -174,6 +174,9 @@ class OsmoGps:
     def save_csv(self, output_file):
         if self.gps_data is not None and self.gps_data != []:
             fields = self._get_ordered_fields()
+            if len(fields) == 0:
+                logger.warning("No fields extracted. No data written.")
+                return False
             if "frame_id" in fields:
                 fields.remove("frame_id")
                 fields.insert(0, "frame_id")
@@ -188,7 +191,10 @@ class OsmoGps:
                 )
 
                 dict_writer.writeheader()
-                for point in self.gps_data:\
+                for i, point in enumerate(self.gps_data):
+                    if len(point) == 0:
+                        logger.warning(f"Empty data point at index {i}. Skipping.")
+                        continue
                     dict_writer.writerow(_render_point(point))
                 logger.info(f"Data written to {output_file}")
 
