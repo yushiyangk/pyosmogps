@@ -47,7 +47,7 @@ def check_camera_model(message):
     return True
 
 
-def extract_gps_info(metadata, timezone_offset=0, extract_extensions=False):
+def extract_gps_info(metadata, timezone_offset=0, extract_extensions=False, require_gps=True):
 
     message = GenericMessage()
     try:
@@ -88,8 +88,11 @@ def extract_gps_info(metadata, timezone_offset=0, extract_extensions=False):
                 })
 
             else:
-                logger.error(f"Missing GPS data in frame {frame_id}. Skipping.")
-                continue
+                if require_gps:
+                    logger.error(f"Missing GPS data in frame {frame_id}. Skipping.")
+                    continue
+                else:
+                    pass
 
             if extract_extensions:
                 if start_offset_microsecond is not None:

@@ -23,13 +23,15 @@ class OsmoGps:
     output_frequency = None
     resampling_method = None
     extract_extensions = False
+    require_gps = True
 
-    def __init__(self, inputs, timezone_offset=0, extract_extensions=False):
+    def __init__(self, inputs, timezone_offset=0, extract_extensions=False, require_gps=True):
         if inputs is None:
             raise ValueError("inputs cannot be None")
         self.inputs = inputs
         self.timezone_offset = timezone_offset
         self.extract_extensions = extract_extensions
+        self.require_gps = require_gps
 
         self.extract()
 
@@ -45,7 +47,7 @@ class OsmoGps:
             metadata = mp4.get_metadata()
 
             gps_info, input_frame_rate = extract_gps_info(
-                metadata, self.timezone_offset, self.extract_extensions
+                metadata, self.timezone_offset, self.extract_extensions, self.require_gps,
             )
             logger.info(f"Frame rate: {input_frame_rate}")
             self.input_frame_rate = input_frame_rate
@@ -76,6 +78,19 @@ class OsmoGps:
                 f"Resampling GPS data with method: {self.resampling_method}, "
                 f"output frequency: {self.output_frequency}"
             )
+
+            if self.resampling_method != "none":
+                if not self.require_gps:
+                    logger.warning("When resampling is enabled, all data points without GPS information will be discarded.")
+                    filtered_gps_data = []
+                    for point in self.gps_data:
+                        if _has_gps(point):
+                            filtered_gps_data.append(point)
+                    discard_count = len(self.gps_data) - len(filtered_gps_data)
+                    if discard_count > 0:
+                        logger.warning(f"Discarded {discard_count} out of {len(self.gps_data)} data points.")
+                    self.gps_data = filtered_gps_data
+
             if self.resampling_method == "linear":
                 resampled_data = linear_resample_gps_data(
                     self.gps_data, self.input_frame_rate, self.output_frequency
@@ -88,9 +103,15 @@ class OsmoGps:
                 resampled_data = discard_resample_gps_data(
                     self.gps_data, self.input_frame_rate, self.output_frequency
                 )
+            else:
+                resampled_data = self.gps_data
+
             self.gps_data = resampled_data
 
     def save_gpx(self, output_file):
+        if not self.require_gps:
+            logger.warning("Data extracted without requiring GPS information. Data points without GPS information will not be included in the GPX file.")
+
         if self.gps_data is not None and self.gps_data != []:
             gpx = gpxpy.gpx.GPX()
             gpx.creator = "pyosmogps -- https://github.com/francescocaponio/pyosmogps"
@@ -101,6 +122,10 @@ class OsmoGps:
 
             for i in range(len(self.gps_data)):
                 gps_point = self.gps_data[i]
+
+                if not _has_gps(gps_point):
+                    logger.warning(f"Mising required GPS data in entry at index {i}. Skipping.")
+                    continue
 
                 point = gpxpy.gpx.GPXTrackPoint(
                     latitude=gps_point["latitude"],
@@ -243,3 +268,8 @@ class _LinkedListNode:
     def __init__(self, value: str, next_node: Optional['_LinkedListNode']=None):
         self.value = value
         self.next_node = next_node
+
+
+def _has_gps(point: dict) -> bool:
+    required_fields = {"timeinfo", "altitude", "longitude", "latitude"}
+    return required_fields <= point.keys()
