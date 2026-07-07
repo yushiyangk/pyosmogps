@@ -197,7 +197,7 @@ class OsmoGps:
             logger.info(f"GPS data written to {output_file}")
             return True
         else:
-            logger.info("No GPS data written.")
+            logger.warning("No GPS data written.")
             return False
 
     def save_csv(self, output_file):
@@ -224,7 +224,7 @@ class OsmoGps:
                 return True
 
         else:
-            logger.info("No data written.")
+            logger.warning("No data written.")
             return False
 
     def _get_ordered_fields(self) -> list:
