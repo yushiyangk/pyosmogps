@@ -60,6 +60,9 @@ class OsmoGps:
         output_frequency=None,
         resampling_method=None,
     ):
+        if self.gps_data is None or len(self.gps_data) == 0:
+            return
+
         self.resampling_method = resampling_method
         if self.resampling_method is not None:
             if self.resampling_method not in ["discard", "linear", "lpf", "none"]:

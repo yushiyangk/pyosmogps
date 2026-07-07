@@ -13,6 +13,10 @@ def discard_resample_gps_data(gps_info, input_frequency, output_frequency):
     :param output_frequency: Desired frequency of the GPS data (Hz).
     :return: Resampled list of dicts.
     """
+
+    if len(gps_info) == 0:
+        return []
+
     if output_frequency > input_frequency:
         raise ValueError("Output frequency cannot be higher than input frequency.")
 
@@ -35,6 +39,9 @@ def lpf_resample_gps_data(gps_info, input_frequency, output_frequency):
     :param output_frequency: Desired frequency of the GPS data (Hz).
     :return: Resampled list of dicts.
     """
+
+    if len(gps_info) == 0:
+        return []
 
     # Calculate cutoff frequency
     cutoff_frequency = output_frequency / 4.0
@@ -95,6 +102,9 @@ def linear_resample_gps_data(gps_info, input_frequency, output_frequency):
     :param output_frequency: Desired frequency of the GPS data (Hz).
     :return: Resampled list of dicts.
     """
+
+    if len(gps_info) == 0:
+        return []
 
     # Calculate total duration and the new sample interval
     total_duration = (
