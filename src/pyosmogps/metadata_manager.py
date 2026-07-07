@@ -64,25 +64,32 @@ def extract_gps_info(metadata, timezone_offset=0, extract_extensions=False):
     except Exception as e:
         logger.error(f"Error during the frame rate extraction: {e}")
 
-    # TODO: check that the message contains the GPS data
-
     gps_data = []
     start_offset_microsecond = None
     if extract_extensions:
         if len(message.video_global_info.module_info) > 0:
             start_offset_microsecond = message.video_global_info.module_info[0].start_offset_microsecond
 
+    gps_expected_fields = {"datetime", "gps_altitude_mm", "info"}
     for frame in message.frame_info:
         try:
-            gpsdate = parser.parse(frame.remote_gps_info.coordinates.datetime.datetime)
-            homedate = gpsdate - timedelta(hours=timezone_offset)
+            frame_id = frame.time_info.frame_id
+            gps_point = {}
 
-            gps_point = {
-                "timeinfo": homedate,
-                "altitude": frame.remote_gps_info.coordinates.gps_altitude_mm / 1000,
-                "longitude": frame.remote_gps_info.coordinates.info.longitude,
-                "latitude": frame.remote_gps_info.coordinates.info.latitude,
-            }
+            if frame.remote_gps_info.HasField("coordinates") and set(descriptor.name for descriptor, value in frame.remote_gps_info.ListFields()) >= gps_expected_fields:
+                gpsdate = parser.parse(frame.remote_gps_info.coordinates.datetime.datetime)
+                homedate = gpsdate - timedelta(hours=timezone_offset)
+
+                gps_point.update({
+                    "timeinfo": homedate,
+                    "altitude": frame.remote_gps_info.coordinates.gps_altitude_mm / 1000,
+                    "longitude": frame.remote_gps_info.coordinates.info.longitude,
+                    "latitude": frame.remote_gps_info.coordinates.info.latitude,
+                })
+
+            else:
+                logger.error(f"Missing GPS data in frame {frame_id}. Skipping.")
+                continue
 
             if extract_extensions:
                 if start_offset_microsecond is not None:
@@ -90,7 +97,7 @@ def extract_gps_info(metadata, timezone_offset=0, extract_extensions=False):
 
                 gps_point.update(
                     {
-                        "frame_id": frame.time_info.frame_id,
+                        "frame_id": frame_id,
                         "iso": frame.camera_info.sensitivity.iso,
                         "shutter_speed": frame.camera_info.shutter_speed.value,
                         "colour_temperature": frame.camera_info.white_balance.temperature,
